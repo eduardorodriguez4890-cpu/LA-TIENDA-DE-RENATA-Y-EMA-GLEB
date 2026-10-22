@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>La tienda de Renata y Ema Gleb</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#fafaf7;--card:#fff;--text:#222;--muted:#777;--accent:#1f9d55;--line:#e5e5e0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17181a;--card:#222426;--text:#eee;--muted:#9a9a9a;--accent:#34c47a;--line:#33363a}}
+:root[data-theme="dark"]{--bg:#17181a;--card:#222426;--text:#eee;--muted:#9a9a9a;--accent:#34c47a;--line:#33363a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;padding-bottom:90px}
+header{text-align:center;padding:24px 16px 8px}
+h1{margin:0;font-size:1.6rem}
+header p{color:var(--muted);margin:6px 0 0}
+.filters{display:flex;gap:8px;overflow-x:auto;padding:12px 16px}
+.filters button{border:1px solid var(--line);background:var(--card);color:var(--text);padding:8px 14px;border-radius:20px;font-size:.95rem;white-space:nowrap}
+.filters button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:0 16px;max-width:900px;margin:auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center}
+.pic{font-size:3rem;line-height:1.3}
+.card h3{margin:6px 0 2px;font-size:1rem}
+.card .d{color:var(--muted);font-size:.85rem;min-height:2.2em}
+.price{font-weight:700;margin:6px 0;color:var(--accent)}
+.qty{display:flex;align-items:center;justify-content:center;gap:12px}
+.qty button{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:1.2rem}
+.qty span{min-width:20px;font-weight:600}
+.bar{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));background:var(--card);border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.bar a{background:var(--accent);color:#fff;text-decoration:none;padding:12px 18px;border-radius:24px;font-weight:600}
+.bar a.off{opacity:.4;pointer-events:none}
+</style>
+</head>
+<body>
+<header>
+<h1>🛍️ La tienda de Renata y Ema Gleb</h1>
+<p>Elige lo que te guste y envíanos tu pedido por WhatsApp</p>
+<div style="margin:12px auto 0;max-width:420px;background:#fff3cd;color:#664d03;border-radius:10px;padding:8px 12px;font-size:.9rem">🚧 Catálogo de prueba: pronto con productos reales</div>
+</header>
+<div class="filters" id="filters"></div>
+<div class="grid" id="grid"></div>
+<div class="bar"><div><strong id="count">0 productos</strong><br><span id="total" style="color:var(--muted)">Bs 0</span></div><a id="send" class="off" href="#">Pedir por WhatsApp</a></div>
+
+<script>
+// ===== EDITA AQUÍ =====
+var WHATSAPP = "59179054538"; // tu número con 591 al inicio, sin + ni espacios
+var PRODUCTOS = [
+  {nombre:"Medias (docena)", desc:"Varios colores", precio:60, cat:"Ropa", icono:"🧦"},
+  {nombre:"Gorra", desc:"Ajustable", precio:35, cat:"Ropa", icono:"🧢"},
+  {nombre:"Cargador de celular", desc:"Carga rápida", precio:25, cat:"Accesorios", icono:"🔌"},
+  {nombre:"Audífonos", desc:"Con micrófono", precio:30, cat:"Accesorios", icono:"🎧"},
+  {nombre:"Detergente 1 kg", desc:"Para ropa", precio:18, cat:"Hogar", icono:"🧴"},
+  {nombre:"Set de vasos", desc:"6 piezas", precio:40, cat:"Hogar", icono:"🥛"}
+];
+// =======================
+var cart = {}, cat = "Todos";
+var cats = ["Todos"].concat(PRODUCTOS.map(function(p){return p.cat}).filter(function(c,i,a){return a.indexOf(c)===i}));
+function draw(){
+  document.getElementById("filters").innerHTML = cats.map(function(c){
+    return '<button class="'+(c===cat?'on':'')+'" onclick="setCat(\''+c+'\')">'+c+'</button>';}).join("");
+  document.getElementById("grid").innerHTML = PRODUCTOS.map(function(p,i){
+    if(cat!=="Todos"&&p.cat!==cat) return "";
+    return '<div class="card"><div class="pic">'+p.icono+'</div><h3>'+p.nombre+'</h3><div class="d">'+p.desc+
+    '</div><div class="price">Bs '+p.precio+'</div><div class="qty"><button onclick="chg('+i+',-1)">−</button><span>'+(cart[i]||0)+
+    '</span><button onclick="chg('+i+',1)">+</button></div></div>';}).join("");
+  var n=0,t=0,msg="Hola, quiero pedir:%0A";
+  PRODUCTOS.forEach(function(p,i){ if(cart[i]){n+=cart[i];t+=cart[i]*p.precio;msg+=cart[i]+" x "+encodeURIComponent(p.nombre)+"%0A";}});
+  msg+="Total: Bs "+t;
+  document.getElementById("count").textContent=n+(n===1?" producto":" productos");
+  document.getElementById("total").textContent="Bs "+t;
+  var a=document.getElementById("send");
+  a.href="https://wa.me/"+WHATSAPP+"?text="+msg;
+  a.className=n?"":"off";
+}
+function setCat(c){cat=c;draw()}
+function chg(i,d){cart[i]=Math.max(0,(cart[i]||0)+d);draw()}
+draw();
+</script>
+</body>
+</html>
